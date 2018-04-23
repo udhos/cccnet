@@ -1,0 +1,24 @@
+ccmendpoint: ccm_lb 
+logcollector: log_host
+ccmlist:
+- name: ccm1
+  host: 1.1.1.1
+- name: ccm2
+  host: 2.2.2.2
+regionlist:
+- ccoendpoint: cco_lb
+  ccolist:
+  - name: cco1
+    host: 3.3.3.3
+  - name: cco2
+    host: 4.4.4.4
+  - name: cco3
+    host: 5.5.5.5
+  rabbitendpointpublic: rabbit_pub_lb
+  rabbitendpointprivate: rabbit_priv_lb 
+  rabbitlist:
+  - name: rabbit1
+    host: 6.6.6.6
+  - name: rabbit2
+    host: 7.7.7.7
+
