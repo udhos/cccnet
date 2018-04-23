@@ -57,8 +57,6 @@ func main() {
 	verbose = os.Getenv("VERBOSE") != ""
 
 	cfg := config{}
-	reg := region{CcoEndpoint: "url"}
-	cfg.RegionList = append(cfg.RegionList, reg)
 
 	dec := yaml.NewDecoder(os.Stdin)
 	log.Printf("reading config from stdin...")
@@ -96,6 +94,8 @@ func run(cfg *config, location string) bool {
 		return runCco(cfg, location)
 	case strings.HasPrefix(location, "rabbit"):
 		return runRabbit(cfg, location)
+	case strings.HasPrefix(location, "worker"):
+		return runWorker(cfg, location)
 	default:
 		log.Printf("bad location: %s", location)
 	}
@@ -128,6 +128,7 @@ func runRabbit(cfg *config, location string) bool {
 		for _, rab := range reg.RabbitList {
 			if rab.Name == location {
 				// found this rabbit
+
 				// 1. test CCO LB
 				if !test(location, reg.Name+",cco-lb", reg.CcoEndpoint, ":8443") {
 					result = false
@@ -186,6 +187,53 @@ func runCcm(cfg *config, location string) bool {
 }
 
 func runCco(cfg *config, location string) bool {
+	result := true
+	if !test(location, "log-collector", cfg.LogCollector, ":4560") {
+		result = false
+	}
+	if !test(location, "log-collector", cfg.LogCollector, ":8881") {
+		result = false
+	}
+	if !test(location, "ccm", cfg.CcmEndpoint, ":8443") {
+		result = false
+	}
+	for _, reg := range cfg.RegionList {
+		for _, o := range reg.CcoList {
+			if o.Name == location {
+				// found this cco
+
+				// 1. test rabbit LB
+				if !test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPublic, ":5671") {
+					result = false
+				}
+
+				// 3. test other ccos
+				for _, other := range reg.CcoList {
+					if !test(location, reg.Name+","+other.Name, other.Host, ":22") {
+						result = false
+					}
+					if !test(location, reg.Name+","+other.Name, other.Host, ":5701") {
+						result = false
+					}
+					if !test(location, reg.Name+","+other.Name, other.Host, ":27017") {
+						result = false
+					}
+					if !test(location, reg.Name+","+other.Name, other.Host, ":8443") {
+						result = false
+					}
+				}
+
+				return result
+			}
+		}
+	}
+	if verbose {
+		log.Printf("could not find this cco: %s", location)
+	}
+	return false
+}
+
+func runWorker(cfg *config, location string) bool {
 	result := true
 	return result
 }

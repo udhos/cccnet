@@ -1,4 +1,5 @@
 ccmendpoint: ccm_lb 
+postgres: postgres_host
 logcollector: log_host
 ccmlist:
 - name: ccm1
