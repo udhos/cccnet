@@ -24,7 +24,7 @@ type ccm struct {
 }
 
 type region struct {
-	Name string
+	Name                  string
 	CcoEndpoint           string
 	CcoList               []cco
 	RabbitEndpointPublic  string
@@ -111,11 +111,53 @@ func runBrowser(cfg *config, location string) bool {
 		result = false
 	}
 	for _, r := range cfg.RegionList {
-		if !test(location, r.Name + ",rabbit-lb-public", r.RabbitEndpointPublic, ":443") {
+		if !test(location, r.Name+",rabbit-lb-public", r.RabbitEndpointPublic, ":443") {
 			result = false
 		}
 	}
 	return result
+}
+
+func runRabbit(cfg *config, location string) bool {
+	result := true
+	for _, reg := range cfg.RegionList {
+		for _, rab := range reg.RabbitList {
+			if rab.Name == location {
+				// found this rabbit
+				// 1. test CCO LB
+				if !test(location, reg.Name+",cco-lb", reg.CcoEndpoint, ":8443") {
+					result = false
+				}
+				// 2. test rabbit LB
+				if !test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPublic, ":7788") {
+					result = false
+				}
+				// 3. test other rabbits
+				for _, other := range reg.RabbitList {
+					if !test(location, reg.Name+","+other.Name, other.Host, ":5671") {
+						result = false
+					}
+					if !test(location, reg.Name+","+other.Name, other.Host, ":7788") {
+						result = false
+					}
+					if !test(location, reg.Name+","+other.Name, other.Host, ":4369") {
+						result = false
+					}
+					if !test(location, reg.Name+","+other.Name, other.Host, ":25672") {
+						result = false
+					}
+					if !test(location, reg.Name+","+other.Name, other.Host, ":22") {
+						result = false
+					}
+				}
+				return result
+			}
+		}
+	}
+	if verbose {
+		log.Printf("could not find this rabbit: %s", location)
+	}
+	return false
 }
 
 func runCcm(cfg *config, location string) bool {
@@ -124,11 +166,6 @@ func runCcm(cfg *config, location string) bool {
 }
 
 func runCco(cfg *config, location string) bool {
-	result := true
-	return result
-}
-
-func runRabbit(cfg *config, location string) bool {
 	result := true
 	return result
 }
