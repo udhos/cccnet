@@ -24,6 +24,7 @@ type ccm struct {
 }
 
 type region struct {
+	Name string
 	CcoEndpoint           string
 	CcoList               []cco
 	RabbitEndpointPublic  string
@@ -110,7 +111,7 @@ func runBrowser(cfg *config, location string) bool {
 		result = false
 	}
 	for _, r := range cfg.RegionList {
-		if !test(location, "rabbit-lb-public", r.RabbitEndpointPublic, ":443") {
+		if !test(location, r.Name + ",rabbit-lb-public", r.RabbitEndpointPublic, ":443") {
 			result = false
 		}
 	}
