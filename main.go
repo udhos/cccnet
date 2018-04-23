@@ -134,9 +134,6 @@ func runRabbit(cfg *config, location string) bool {
 				}
 				// 3. test other rabbits
 				for _, other := range reg.RabbitList {
-					if !test(location, reg.Name+","+other.Name, other.Host, ":5671") {
-						result = false
-					}
 					if !test(location, reg.Name+","+other.Name, other.Host, ":7788") {
 						result = false
 					}
