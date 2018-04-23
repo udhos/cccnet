@@ -120,6 +120,9 @@ func runBrowser(cfg *config, location string) bool {
 
 func runRabbit(cfg *config, location string) bool {
 	result := true
+	if !test(location, "ccm", cfg.CcmEndpoint, ":443") {
+		result = false
+	}
 	for _, reg := range cfg.RegionList {
 		for _, rab := range reg.RabbitList {
 			if rab.Name == location {
