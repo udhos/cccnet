@@ -12,6 +12,7 @@ import (
 )
 
 type config struct {
+	Postgres     string
 	CcmEndpoint  string
 	CcmList      []ccm
 	RegionList   []region
@@ -162,6 +163,25 @@ func runRabbit(cfg *config, location string) bool {
 
 func runCcm(cfg *config, location string) bool {
 	result := true
+	if !test(location, "postgres", cfg.Postgres, ":5432") {
+		result = false
+	}
+	if !test(location, "log-collector", cfg.LogCollector, ":4560") {
+		result = false
+	}
+	if !test(location, "log-collector", cfg.LogCollector, ":8881") {
+		result = false
+	}
+	for _, reg := range cfg.RegionList {
+		if !test(location, reg.Name+",cco-lb", reg.CcoEndpoint, ":8443") {
+			result = false
+		}
+	}
+	for _, ccm := range cfg.CcmList {
+		if !test(location, ccm.Name, ccm.Host, ":22") {
+			result = false
+		}
+	}
 	return result
 }
 
