@@ -235,6 +235,14 @@ func runCco(cfg *config, location string) bool {
 
 func runWorker(cfg *config, location string) bool {
 	result := true
+	for _, reg := range cfg.RegionList {
+		if !test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPublic, ":5671") {
+			result = false
+		}
+		if !test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPublic, ":7789") {
+			result = false
+		}
+	}
 	return result
 }
 
