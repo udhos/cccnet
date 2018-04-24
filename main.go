@@ -45,8 +45,6 @@ type rabbit struct {
 }
 
 var verbose bool
-var dump bool
-var mock string
 var tabMock = map[string]int{}
 
 func main() {
@@ -60,8 +58,8 @@ func main() {
 	location := os.Args[1]
 
 	verbose = os.Getenv("VERBOSE") != ""
-	dump = os.Getenv("DUMP") != ""
-	mock = os.Getenv("MOCK")
+	dump := os.Getenv("DUMP") != ""
+	mock := os.Getenv("MOCK")
 	log.Printf("runtime %s VERBOSE=%v DUMP=%v MOCK=%v", runtime.Version(), verbose, dump, mock)
 
 	for _, m := range strings.Split(mock, ",") {
