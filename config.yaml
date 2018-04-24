@@ -10,33 +10,33 @@ regionlist:
 - name: aws-sa-east-1
   ccoendpoint: cco_lb
   ccolist:
-  - name: awscco1
+  - name: cco-aws1
     host: 3.3.3.3
-  - name: awscco2
+  - name: cco-aws2
     host: 4.4.4.4
-  - name: awscco3
+  - name: cco-aws3
     host: 5.5.5.5
   rabbitendpointpublic: rabbit_pub_lb
   rabbitendpointprivate: rabbit_priv_lb 
   rabbitlist:
-  - name: awsrabbit1
+  - name: rabbit-aws1
     host: 6.6.6.6
-  - name: awsrabbit2
+  - name: rabbit-aws2
     host: 7.7.7.7
 - name: azure-sp
   ccoendpoint: cco_lb
   ccolist:
-  - name: azurecco1
+  - name: cco-azure1
     host: 3.3.3.3
-  - name: azurecco2
+  - name: cco-azure2
     host: 4.4.4.4
-  - name: azurecco3
+  - name: cco-azure3
     host: 5.5.5.5
   rabbitendpointpublic: rabbit_pub_lb
   rabbitendpointprivate: rabbit_priv_lb 
   rabbitlist:
-  - name: azurerabbit1
+  - name: rabbit-azure1
     host: 6.6.6.6
-  - name: azurerabbit2
+  - name: rabbit-azure2
     host: 7.7.7.7
 
