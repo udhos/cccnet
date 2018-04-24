@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 	"path"
+	"runtime"
 	"strings"
 	"time"
 
@@ -44,6 +45,7 @@ type rabbit struct {
 }
 
 var verbose bool
+var dump bool
 
 func main() {
 
@@ -56,6 +58,8 @@ func main() {
 	location := os.Args[1]
 
 	verbose = os.Getenv("VERBOSE") != ""
+	dump = os.Getenv("DUMP") != ""
+	log.Printf("runtime %s VERBOSE=%v DUMP=%v", runtime.Version(), verbose, dump)
 
 	cfg := config{}
 
@@ -68,12 +72,14 @@ func main() {
 
 	result := run(&cfg, location)
 
-	enc := yaml.NewEncoder(os.Stdout)
-	log.Printf("writing config to stdout...")
-	if errEnc := enc.Encode(&cfg); errEnc != nil {
-		log.Printf("error encoding config to stdout: %v", errEnc)
+	if dump {
+		enc := yaml.NewEncoder(os.Stdout)
+		log.Printf("writing config to stdout...")
+		if errEnc := enc.Encode(&cfg); errEnc != nil {
+			log.Printf("error encoding config to stdout: %v", errEnc)
+		}
+		log.Printf("writing config to stdout...done")
 	}
-	log.Printf("writing config to stdout...done")
 
 	if !result {
 		log.Printf("FAILURE")
