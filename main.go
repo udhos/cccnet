@@ -249,6 +249,9 @@ func runWorker(cfg *config, location string) bool {
 
 func test(location, target, host, port string) bool {
 	endp := host + port
+	if verbose {
+		log.Printf("%s: target=%s: opening: %s", location, target, endp)
+	}
 	connected := open(endp)
 	if !connected {
 		log.Printf("%s: target=%s: failure: %s", location, target, endp)
