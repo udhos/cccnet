@@ -45,7 +45,7 @@ type rabbit struct {
 }
 
 var verbose bool
-var tabMock = map[string]int{}
+var tabMock = map[string]struct{}{}
 
 func main() {
 
@@ -63,7 +63,7 @@ func main() {
 	log.Printf("runtime %s VERBOSE=%v DUMP=%v MOCK=%v", runtime.Version(), verbose, dump, mock)
 
 	for _, m := range strings.Split(mock, ",") {
-		tabMock[m] = 1
+		tabMock[m] = struct{}{}
 	}
 
 	cfg := config{}
