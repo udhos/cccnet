@@ -46,6 +46,8 @@ type rabbit struct {
 
 var verbose bool
 var dump bool
+var mock string
+var tabMock = map[string]int{}
 
 func main() {
 
@@ -59,7 +61,12 @@ func main() {
 
 	verbose = os.Getenv("VERBOSE") != ""
 	dump = os.Getenv("DUMP") != ""
-	log.Printf("runtime %s VERBOSE=%v DUMP=%v", runtime.Version(), verbose, dump)
+	mock = os.Getenv("MOCK")
+	log.Printf("runtime %s VERBOSE=%v DUMP=%v MOCK=%v", runtime.Version(), verbose, dump, mock)
+
+	for _, m := range strings.Split(mock, ",") {
+		tabMock[m] = 1
+	}
 
 	cfg := config{}
 
@@ -270,6 +277,10 @@ func test(location, target, host, port string) bool {
 }
 
 func open(addr string) bool {
+
+	if _, found := tabMock[addr]; found {
+		return true
+	}
 
 	timeout := 3 * time.Second
 
