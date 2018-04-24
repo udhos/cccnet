@@ -273,9 +273,7 @@ func open(addr string) bool {
 		return true
 	}
 
-	if verbose {
-		log.Printf("connect failure: %s: %v", addr, err)
-	}
+	log.Printf("connect failure: %s: %v", addr, err)
 
 	return false
 }
