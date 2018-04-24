@@ -52,7 +52,7 @@ func main() {
 	me := path.Base(os.Args[0])
 	if len(os.Args) < 2 {
 		log.Printf("usage: %s location", me)
-		log.Print("location is one of: browser worker ccoName ccmName rabbitName", me)
+		log.Print("location is one of: browser worker ccoName ccmName rabbitName")
 		os.Exit(1)
 	}
 	location := os.Args[1]
