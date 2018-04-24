@@ -95,7 +95,7 @@ func run(cfg *config, location string) bool {
 		return runCco(cfg, location)
 	case strings.HasPrefix(location, "rabbit"):
 		return runRabbit(cfg, location)
-	case strings.HasPrefix(location, "worker"):
+	case location == "worker":
 		return runWorker(cfg, location)
 	default:
 		log.Printf("bad location: %s", location)
