@@ -12,6 +12,8 @@ import (
 	"gopkg.in/v2/yaml"
 )
 
+const version = "0.0"
+
 type config struct {
 	Postgres     string
 	CcmEndpoint  string
@@ -60,7 +62,7 @@ func main() {
 	verbose = os.Getenv("VERBOSE") != ""
 	dump := os.Getenv("DUMP") != ""
 	mock := os.Getenv("MOCK")
-	log.Printf("runtime %s VERBOSE=%v DUMP=%v MOCK=%v", runtime.Version(), verbose, dump, mock)
+	log.Printf("version %s runtime %s VERBOSE=%v DUMP=%v MOCK=%v", version, runtime.Version(), verbose, dump, mock)
 
 	for _, m := range strings.Split(mock, ",") {
 		tabMock[m] = struct{}{}
