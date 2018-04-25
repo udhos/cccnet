@@ -48,6 +48,7 @@ type rabbit struct {
 
 var verbose bool
 var tabMock = map[string]struct{}{}
+var result bool
 
 func main() {
 
@@ -77,7 +78,7 @@ func main() {
 	}
 	log.Printf("reading config from stdin...done")
 
-	result := run(&cfg, location)
+	run(&cfg, location)
 
 	if dump {
 		enc := yaml.NewEncoder(os.Stdout)
@@ -97,188 +98,129 @@ func main() {
 	}
 }
 
-func run(cfg *config, location string) bool {
+func run(cfg *config, location string) {
 
 	switch {
 	case location == "browser":
-		return runBrowser(cfg, location)
+		runBrowser(cfg, location)
+		return
 	case strings.HasPrefix(location, "ccm"):
-		return runCcm(cfg, location)
+		runCcm(cfg, location)
+		return
 	case strings.HasPrefix(location, "cco"):
-		return runCco(cfg, location)
+		runCco(cfg, location)
+		return
 	case strings.HasPrefix(location, "rabbit"):
-		return runRabbit(cfg, location)
+		runRabbit(cfg, location)
+		return
 	case location == "worker":
-		return runWorker(cfg, location)
+		runWorker(cfg, location)
+		return
 	default:
 		log.Printf("bad location: %s", location)
 	}
 
-	return false
+	result = false // force failure
 }
 
-func runBrowser(cfg *config, location string) bool {
-	result := true
-	if !test(location, "ccm", cfg.CcmEndpoint, ":443") {
-		result = false
-	}
-	if !test(location, "log-collector", cfg.LogCollector, ":8882") {
-		result = false
-	}
+func runBrowser(cfg *config, location string) {
+	result = true
+	test(location, "ccm", cfg.CcmEndpoint, ":443")
+	test(location, "log-collector", cfg.LogCollector, ":8882")
 	for _, r := range cfg.RegionList {
-		if !test(location, r.Name+",rabbit-lb-public", r.RabbitEndpointPublic, ":443") {
-			result = false
-		}
+		test(location, r.Name+",rabbit-lb-public", r.RabbitEndpointPublic, ":443")
 	}
-	return result
 }
 
-func runRabbit(cfg *config, location string) bool {
-	result := true
-	if !test(location, "ccm", cfg.CcmEndpoint, ":443") {
-		result = false
-	}
+func runRabbit(cfg *config, location string) {
+	result = true
+	test(location, "ccm", cfg.CcmEndpoint, ":443")
 	for _, reg := range cfg.RegionList {
 		for _, rab := range reg.RabbitList {
 			if rab.Name == location {
 				// found this rabbit
 
 				// 1. test CCO LB
-				if !test(location, reg.Name+",cco-lb", reg.CcoEndpoint, ":8443") {
-					result = false
-				}
+				test(location, reg.Name+",cco-lb", reg.CcoEndpoint, ":8443")
 				// 2. test rabbit LB
-				if !test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPublic, ":7789") {
-					// check that 7789 is open, but not needed from rabbit
-					result = false
-				}
-				if !test(location, reg.Name+",rabbit-lb-private", reg.RabbitEndpointPrivate, ":7789") {
-					// check that 7789 is open, but not needed from rabbit
-					result = false
-				}
-				if !test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPublic, ":7788") {
-					result = false
-				}
-				if !test(location, reg.Name+",rabbit-lb-private", reg.RabbitEndpointPrivate, ":7788") {
-					result = false
-				}
+				test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPublic, ":7789")   // check that 7789 is open, but not needed from rabbit
+				test(location, reg.Name+",rabbit-lb-private", reg.RabbitEndpointPrivate, ":7789") // check that 7789 is open, but not needed from rabbit
+				test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPublic, ":7788")
+				test(location, reg.Name+",rabbit-lb-private", reg.RabbitEndpointPrivate, ":7788")
 				// 3. test other rabbits
 				for _, other := range reg.RabbitList {
-					if !test(location, reg.Name+","+other.Name, other.Host, ":7789") {
-						// check that 7789 is open, but not needed from rabbit
-						result = false
-					}
-					if !test(location, reg.Name+","+other.Name, other.Host, ":7788") {
-						result = false
-					}
-					if !test(location, reg.Name+","+other.Name, other.Host, ":4369") {
-						result = false
-					}
-					if !test(location, reg.Name+","+other.Name, other.Host, ":25672") {
-						result = false
-					}
-					if !test(location, reg.Name+","+other.Name, other.Host, ":22") {
-						result = false
-					}
+					test(location, reg.Name+","+other.Name, other.Host, ":7789") // check that 7789 is open, but not needed from rabbit
+					test(location, reg.Name+","+other.Name, other.Host, ":7788")
+					test(location, reg.Name+","+other.Name, other.Host, ":4369")
+					test(location, reg.Name+","+other.Name, other.Host, ":25672")
+					test(location, reg.Name+","+other.Name, other.Host, ":22")
 				}
-				return result
+				return
 			}
 		}
 	}
-	if verbose {
-		log.Printf("could not find this rabbit: %s", location)
-	}
-	return false
+	log.Printf("could not find this rabbit: %s", location)
+	result = false
 }
 
-func runCcm(cfg *config, location string) bool {
-	result := true
-	if !test(location, "postgres", cfg.Postgres, ":5432") {
-		result = false
-	}
-	if !test(location, "log-collector", cfg.LogCollector, ":4560") {
-		result = false
-	}
-	if !test(location, "log-collector", cfg.LogCollector, ":8881") {
-		result = false
-	}
+func runCcm(cfg *config, location string) {
+	result = true
+	test(location, "postgres", cfg.Postgres, ":5432")
+	test(location, "log-collector", cfg.LogCollector, ":4560")
+	test(location, "log-collector", cfg.LogCollector, ":8881")
 	for _, reg := range cfg.RegionList {
-		if !test(location, reg.Name+",cco-lb", reg.CcoEndpoint, ":8443") {
-			result = false
-		}
+		test(location, reg.Name+",cco-lb", reg.CcoEndpoint, ":8443")
 	}
 	for _, ccm := range cfg.CcmList {
-		if !test(location, ccm.Name, ccm.Host, ":22") {
-			result = false
-		}
+		test(location, ccm.Name, ccm.Host, ":22")
 	}
-	return result
 }
 
-func runCco(cfg *config, location string) bool {
-	result := true
-	if !test(location, "log-collector", cfg.LogCollector, ":4560") {
-		result = false
-	}
-	if !test(location, "log-collector", cfg.LogCollector, ":8881") {
-		result = false
-	}
-	if !test(location, "ccm", cfg.CcmEndpoint, ":8443") {
-		result = false
-	}
+func runCco(cfg *config, location string) {
+	result = true
+	test(location, "log-collector", cfg.LogCollector, ":4560")
+	test(location, "log-collector", cfg.LogCollector, ":8881")
+	test(location, "ccm", cfg.CcmEndpoint, ":8443")
 	for _, reg := range cfg.RegionList {
 		for _, o := range reg.CcoList {
 			if o.Name == location {
 				// found this cco
 
 				// 1. test rabbit LB
-				if !test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPublic, ":5671") {
-					result = false
-				}
-				if !test(location, reg.Name+",rabbit-lb-private", reg.RabbitEndpointPrivate, ":5671") {
-					result = false
-				}
+				test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPublic, ":5671")
+				test(location, reg.Name+",rabbit-lb-private", reg.RabbitEndpointPrivate, ":5671")
 
 				// 3. test other ccos
 				for _, other := range reg.CcoList {
-					if !test(location, reg.Name+","+other.Name, other.Host, ":22") {
-						result = false
-					}
-					if !test(location, reg.Name+","+other.Name, other.Host, ":5701") {
-						result = false
-					}
-					if !test(location, reg.Name+","+other.Name, other.Host, ":27017") {
-						result = false
-					}
-					if !test(location, reg.Name+","+other.Name, other.Host, ":8443") {
-						result = false
-					}
+					test(location, reg.Name+","+other.Name, other.Host, ":22")
+					test(location, reg.Name+","+other.Name, other.Host, ":5701")
+					test(location, reg.Name+","+other.Name, other.Host, ":27017")
+					test(location, reg.Name+","+other.Name, other.Host, ":8443")
 				}
 
-				return result
+				return
 			}
 		}
 	}
-	if verbose {
-		log.Printf("could not find this cco: %s", location)
-	}
-	return false
+	log.Printf("could not find this cco: %s", location)
+	result = false
 }
 
-func runWorker(cfg *config, location string) bool {
-	result := true
+func runWorker(cfg *config, location string) {
+	result = true
 	for _, reg := range cfg.RegionList {
-		if !test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPrivate, ":5671") {
-			result = false
-		}
-		if !test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPrivate, ":7789") {
-			result = false
-		}
+		test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPrivate, ":5671")
+		test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPrivate, ":7789")
 	}
-	return result
 }
 
-func test(location, target, host, port string) bool {
+func test(location, target, host, port string) {
+	if !connect(location, target, host, port) {
+		result = false
+	}
+}
+
+func connect(location, target, host, port string) bool {
 	endp := host + port
 	if verbose {
 		log.Printf("%s: target=%s: opening: %s", location, target, endp)
