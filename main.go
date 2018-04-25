@@ -148,11 +148,26 @@ func runRabbit(cfg *config, location string) bool {
 					result = false
 				}
 				// 2. test rabbit LB
+				if !test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPublic, ":7789") {
+					// check that 7789 is open, but not needed from rabbit
+					result = false
+				}
+				if !test(location, reg.Name+",rabbit-lb-private", reg.RabbitEndpointPrivate, ":7789") {
+					// check that 7789 is open, but not needed from rabbit
+					result = false
+				}
 				if !test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPublic, ":7788") {
+					result = false
+				}
+				if !test(location, reg.Name+",rabbit-lb-private", reg.RabbitEndpointPrivate, ":7788") {
 					result = false
 				}
 				// 3. test other rabbits
 				for _, other := range reg.RabbitList {
+					if !test(location, reg.Name+","+other.Name, other.Host, ":7789") {
+						// check that 7789 is open, but not needed from rabbit
+						result = false
+					}
 					if !test(location, reg.Name+","+other.Name, other.Host, ":7788") {
 						result = false
 					}
@@ -218,6 +233,9 @@ func runCco(cfg *config, location string) bool {
 
 				// 1. test rabbit LB
 				if !test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPublic, ":5671") {
+					result = false
+				}
+				if !test(location, reg.Name+",rabbit-lb-private", reg.RabbitEndpointPrivate, ":5671") {
 					result = false
 				}
 
