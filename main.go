@@ -216,8 +216,8 @@ func runWorker(cfg *config, location, region string) {
 	result = true
 	for _, reg := range cfg.RegionList {
 		if region == reg.Name {
-			test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPrivate, ":5671")
-			test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPrivate, ":7789")
+			test(location, reg.Name+",rabbit-lb-private", reg.RabbitEndpointPrivate, ":5671")
+			test(location, reg.Name+",rabbit-lb-private", reg.RabbitEndpointPrivate, ":7789")
 			return
 		}
 	}
