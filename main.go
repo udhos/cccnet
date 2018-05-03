@@ -55,7 +55,7 @@ func main() {
 	me := path.Base(os.Args[0])
 	if len(os.Args) < 2 {
 		log.Printf("usage: %s location", me)
-		log.Print("location is one of: browser worker ccoName ccmName rabbitName")
+		log.Print("location is one of: browser worker,region ccoName ccmName rabbitName")
 		os.Exit(1)
 	}
 	location := os.Args[1]
@@ -113,8 +113,14 @@ func run(cfg *config, location string) {
 	case strings.HasPrefix(location, "rabbit"):
 		runRabbit(cfg, location)
 		return
-	case location == "worker":
-		runWorker(cfg, location)
+	case strings.HasPrefix(location, "worker"):
+		s := strings.Split(location, ",")
+		if len(s) < 2 {
+			log.Printf("wrong worker,region location: [%s]", location)
+			result = false
+			return
+		}
+		runWorker(cfg, s[0], s[1])
 		return
 	default:
 		log.Printf("bad location: %s", location)
@@ -206,12 +212,17 @@ func runCco(cfg *config, location string) {
 	result = false
 }
 
-func runWorker(cfg *config, location string) {
+func runWorker(cfg *config, location, region string) {
 	result = true
 	for _, reg := range cfg.RegionList {
-		test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPrivate, ":5671")
-		test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPrivate, ":7789")
+		if region == reg.Name {
+			test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPrivate, ":5671")
+			test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPrivate, ":7789")
+			return
+		}
 	}
+	log.Printf("could not find this worker region: %s", region)
+	result = false
 }
 
 func test(location, target, host, port string) {
