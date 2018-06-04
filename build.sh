@@ -2,6 +2,8 @@
 
 gobin=~/go/bin
 
+go get gopkg.in/yaml.v2
+
 gofmt -s -w *.go
 go tool fix *.go
 go tool vet .

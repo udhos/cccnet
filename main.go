@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/v2/yaml"
+	"gopkg.in/yaml.v2"
 )
 
 const version = "0.0"
@@ -49,6 +49,9 @@ type rabbit struct {
 var verbose bool
 var tabMock = map[string]struct{}{}
 var result bool
+var checkWorkerPortsFromRabbit bool
+var checkPub7788FromRabbit bool
+var checkPub5671FromRabbit bool
 
 func main() {
 
@@ -63,7 +66,10 @@ func main() {
 	verbose = os.Getenv("VERBOSE") != ""
 	dump := os.Getenv("DUMP") != ""
 	mock := os.Getenv("MOCK")
-	log.Printf("version %s runtime %s VERBOSE=%v DUMP=%v MOCK=%v", version, runtime.Version(), verbose, dump, mock)
+	checkWorkerPortsFromRabbit = os.Getenv("WORKER_FROM_RABBIT") != ""
+	checkPub7788FromRabbit = os.Getenv("PUB7788_FROM_RABBIT") != ""
+	checkPub5671FromRabbit = os.Getenv("PUB5671_FROM_RABBIT") != ""
+	log.Printf("version %s runtime %s VERBOSE=%v DUMP=%v MOCK=%v WORKER_FROM_RABBIT=%v PUB7788_FROM_RABBIT=%v PUB5671_FROM_RABBIT=%v", version, runtime.Version(), verbose, dump, mock, checkWorkerPortsFromRabbit, checkPub7788FromRabbit, checkPub5671FromRabbit)
 
 	for _, m := range strings.Split(mock, ",") {
 		tabMock[m] = struct{}{}
@@ -149,9 +155,13 @@ func runRabbit(cfg *config, location string) {
 				// 1. test CCO LB
 				test(location, reg.Name+",cco-lb", reg.CcoEndpoint, ":8443")
 				// 2. test rabbit LB
-				test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPublic, ":7789")   // check that 7789 is open, but not needed from rabbit
-				test(location, reg.Name+",rabbit-lb-private", reg.RabbitEndpointPrivate, ":7789") // check that 7789 is open, but not needed from rabbit
-				test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPublic, ":7788")
+				if checkWorkerPortsFromRabbit {
+					test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPublic, ":7789")   // check that 7789 is open, but not needed fro
+					test(location, reg.Name+",rabbit-lb-private", reg.RabbitEndpointPrivate, ":7789") // check that 7789 is open, but not needed fro
+				}
+				if checkPub7788FromRabbit {
+					test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPublic, ":7788")
+				}
 				test(location, reg.Name+",rabbit-lb-private", reg.RabbitEndpointPrivate, ":7788")
 				// 3. test other rabbits
 				for _, other := range reg.RabbitList {
@@ -194,7 +204,9 @@ func runCco(cfg *config, location string) {
 				// found this cco
 
 				// 1. test rabbit LB
-				test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPublic, ":5671")
+				if checkPub5671FromRabbit {
+					test(location, reg.Name+",rabbit-lb-public", reg.RabbitEndpointPublic, ":5671")
+				}
 				test(location, reg.Name+",rabbit-lb-private", reg.RabbitEndpointPrivate, ":5671")
 
 				// 3. test other ccos
