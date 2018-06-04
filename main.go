@@ -187,6 +187,7 @@ func runCco(cfg *config, location string) {
 	test(location, "log-collector", cfg.LogCollector, ":4560")
 	test(location, "log-collector", cfg.LogCollector, ":8881")
 	test(location, "ccm", cfg.CcmEndpoint, ":8443")
+	test(location, "ccm", cfg.CcmEndpoint, ":443")
 	for _, reg := range cfg.RegionList {
 		for _, o := range reg.CcoList {
 			if o.Name == location {
